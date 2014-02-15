@@ -186,6 +186,10 @@ public abstract class GerritEventKeys {
      * nodesCount.
      */
     public static final String NODES_COUNT = "nodesCount";
+    /**
+     * comment.
+     */
+    public static final String COMMENT = "comment";
 
     /**
      * Empty default constructor to hinder instantiation.

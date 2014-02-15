@@ -807,10 +807,12 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
             try {
                 if (event instanceof ChangeBasedEvent) {
                     ChangeBasedEvent changeBasedEvent = (ChangeBasedEvent)event;
+                    logger.trace("Event: {}", event);
                     if (isServerInteresting(event)
                          && p.isInteresting(changeBasedEvent.getChange().getProject(),
                                             changeBasedEvent.getChange().getBranch(),
                                             changeBasedEvent.getChange().getTopic())) {
+                        logger.trace("Server and project are interesting");
                         if (isFileTriggerEnabled() && p.getFilePaths() != null
                                 && p.getFilePaths().size() > 0) {
                             if (isServerInteresting(event)
@@ -821,11 +823,15 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
                                                         new GerritQueryHandler(getServerConfig(event))))) {
                                 logger.trace("According to {} the event is interesting.", p);
                                 return true;
+                            } else {
+                            logger.trace("Inner - Server or project are not interesting");
                             }
                         } else {
                             logger.trace("According to {} the event is interesting.", p);
                             return true;
                         }
+                    } else {
+                        logger.trace("Server or project is not interesting");
                     }
                 } else if (event instanceof RefUpdated) {
                     RefUpdated refUpdated = (RefUpdated)event;
@@ -834,6 +840,8 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
                         logger.trace("According to {} the event is interesting.", p);
                         return true;
                     }
+                } else {
+                    logger.trace("Un handled event type: {}", event);
                 }
             } catch (PatternSyntaxException pse) {
                 logger.error(MessageFormat.format("Exception caught for project {0} and pattern {1}, message: {2}",
@@ -852,10 +860,15 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
      */
     private boolean isServerInteresting(GerritTriggeredEvent event) {
         if (isAnyServer()) {
+            logger.trace("Any server");
             return true;
         }
         Provider provider = initializeProvider(event);
-        return provider.getName().equals(serverName);
+        logger.trace("Provider name: {}", provider.getName());
+        logger.trace("Server name: {}", serverName);
+        boolean equal = provider.getName().equals(serverName);
+        logger.trace("Equal: {}", equal);
+        return equal;
     }
 
     /**
@@ -866,15 +879,27 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
      * @return true if the event matches the approval category and value configured.
      */
     private boolean matchesApproval(CommentAdded event) {
+        logger.trace("Event: {}", event);
         PluginCommentAddedEvent commentAdded = null;
         for (PluginGerritEvent e : triggerOnEvents) {
             if (e instanceof PluginCommentAddedEvent) {
                 commentAdded = (PluginCommentAddedEvent)e;
+                logger.trace("Comment category: {}", commentAdded.getVerdictCategory());
+                logger.trace("Comment approval value: {}", commentAdded.getCommentAddedTriggerApprovalValue());
                 for (Approval approval : event.getApprovals()) {
+                    logger.trace("Approval category: {}", approval.getType());
+                    logger.trace("Approval value: {}", approval.getValue());
                     if (approval.getType().equals(commentAdded.getVerdictCategory())
                         && (approval.getValue().equals(commentAdded.getCommentAddedTriggerApprovalValue())
                         || ("+" + approval.getValue()).equals(commentAdded.getCommentAddedTriggerApprovalValue()))) {
-                    return true;
+        
+                        logger.trace("Comment: {}", event.getComment());
+                        return commentAdded.matchComment(event.getComment());
+                        // if (event.getComment().equals("recheck no bug")) {
+                        //     return true;
+                        // } else {
+                        //     return false;
+                        // }
                     }
                 }
             }

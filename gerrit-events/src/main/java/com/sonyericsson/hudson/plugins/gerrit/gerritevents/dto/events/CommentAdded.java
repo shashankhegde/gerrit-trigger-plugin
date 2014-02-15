@@ -34,6 +34,8 @@ import net.sf.json.JSONArray;
 
 import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEventKeys.AUTHOR;
 import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEventKeys.APPROVALS;
+import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEventKeys.COMMENT;
+
 
 /**
  * A DTO representation of the comment-added Gerrit Event.
@@ -41,6 +43,7 @@ import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEven
  */
 public class CommentAdded extends ChangeBasedEvent {
     private List<Approval> approvals = new ArrayList<Approval>();
+    private String comment;
 
     @Override
     public GerritEventType getEventType() {
@@ -68,6 +71,10 @@ public class CommentAdded extends ChangeBasedEvent {
         return true;
     }
 
+    public String getComment() {
+        return comment;
+    }
+
     @Override
     public void fromJson(JSONObject json) {
         super.fromJson(json);
@@ -79,6 +86,9 @@ public class CommentAdded extends ChangeBasedEvent {
             for (int i = 0; i < eventApprovals.size(); i++) {
                 approvals.add(new Approval(eventApprovals.getJSONObject(i)));
             }
+        }
+        if (json.containsKey(COMMENT)) {
+            comment = json.getString(COMMENT);
         }
     }
 }

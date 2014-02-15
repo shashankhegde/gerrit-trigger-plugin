@@ -32,11 +32,16 @@ import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEven
 import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEventKeys.VALUE;
 import static com.sonyericsson.hudson.plugins.gerrit.gerritevents.dto.GerritEventKeys.USERNAME;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Represents a Gerrit JSON Approval DTO.
  * @author James E. Blair &lt;jeblair@hp.com&gt;
  */
 public class Approval implements GerritJsonDTO {
+
+    private static final Logger logger = LoggerFactory.getLogger(Approval.class);
 
     /**
      * The approval category.
@@ -63,6 +68,8 @@ public class Approval implements GerritJsonDTO {
      * @param json the JSON object with corresponding data.
      */
     public Approval(JSONObject json) {
+        logger.trace("Constructing approval");
+        logger.trace("Json: {}", json.toString());
         this.fromJson(json);
     }
 

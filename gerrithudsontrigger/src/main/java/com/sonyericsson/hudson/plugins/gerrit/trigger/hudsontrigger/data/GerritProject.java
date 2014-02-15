@@ -42,12 +42,16 @@ import org.kohsuke.stapler.QueryParameter;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.GerritServer;
 import com.sonyericsson.hudson.plugins.gerrit.trigger.PluginImpl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Base settings for one matcher rule of a Gerrit project.
  * @author Robert Sandell &lt;robert.sandell@sonyericsson.com&gt;
  */
 public class GerritProject implements Describable<GerritProject> {
 
+    private static final Logger logger = LoggerFactory.getLogger(GerritProject.class);
     private CompareType compareType;
     private String pattern;
     private List<Branch> branches;
@@ -193,21 +197,34 @@ public class GerritProject implements Describable<GerritProject> {
      * @return true is the rules match.
      */
     public boolean isInteresting(String project, String branch, String topic, List<String> files) {
+        logger.trace("Project: {}", project);
+        logger.trace("Branch: {}", branch);
+        logger.trace("Topic: {}", topic);
         if (compareType.matches(pattern, project)) {
             for (Branch b : branches) {
                 if (b.isInteresting(branch)) {
                     if (forbiddenFilePaths != null) {
                         for (FilePath ffp : forbiddenFilePaths) {
                             if (ffp.isInteresting(files)) {
+                                logger.trace("Forbidden file {}", ffp);
                                 return false;
                             }
                         }
                     }
                     if (isInterestingTopic(topic) && isInterestingFile(files)) {
                         return true;
+                    } else {
+                        //logger.trace("Topic {0} : {1}", new Object[]{topic, isInterestingTopic(topic)});
+                        //logger.trace("File {0} : {1}", new Object[]{files, isInterestingFile(files)});
+                        logger.trace("Topic {} : {}", topic, isInterestingTopic(topic));
+                        logger.trace("File {} : {}", files, isInterestingFile(files));
                     }
+                } else {
+                    logger.trace("Branch {} is not interesting", branch);
                 }
             }
+        } else {
+            logger.trace("Pattern {0} does not match project {1}", new Object[]{pattern, project});
         }
         return false;
     }
@@ -220,12 +237,21 @@ public class GerritProject implements Describable<GerritProject> {
      * @return true is the rules match.
      */
     public boolean isInteresting(String project, String branch, String topic) {
+        logger.trace("Project: {}", project);
+        logger.trace("Branch: {}", branch);
+        logger.trace("Topic: {}", topic);
         if (compareType.matches(pattern, project)) {
             for (Branch b : branches) {
                 if (b.isInteresting(branch)) {
-                    return isInterestingTopic(topic);
+                    boolean ret = isInterestingTopic(topic);
+                    logger.trace("Topic {} is : {}", topic, ret);
+                    return ret;
+                } else {
+                    logger.trace("Branch {} is not interesting", branch);
                 }
             }
+        } else {
+            logger.trace("Pattern {} does not match project {}", pattern, project);
         }
         return false;
     }
