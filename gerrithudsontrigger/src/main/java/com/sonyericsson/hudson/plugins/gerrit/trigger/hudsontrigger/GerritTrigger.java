@@ -892,20 +892,35 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
                     if (approval.getType().equals(commentAdded.getVerdictCategory())
                         && (approval.getValue().equals(commentAdded.getCommentAddedTriggerApprovalValue())
                         || ("+" + approval.getValue()).equals(commentAdded.getCommentAddedTriggerApprovalValue()))) {
-        
-                        logger.trace("Comment: {}", event.getComment());
-                        return commentAdded.matchComment(event.getComment());
-                        // if (event.getComment().equals("recheck no bug")) {
-                        //     return true;
-                        // } else {
-                        //     return false;
-                        // }
+                        return true;
                     }
                 }
             }
         }
         return false;
     }
+
+    /**
+     * Checks whether the comment matches the specified regular expression
+     *
+     * @param event the event.
+     * @return true if the comment is interesting.
+     */
+    private boolean matchesComment(CommentAdded event) {
+        logger.trace("Event: {}", event);
+        PluginCommentAddedEvent commentAdded = null;
+        for (PluginGerritEvent e : triggerOnEvents) {
+            if (e instanceof PluginCommentAddedEvent) {
+                commentAdded = (PluginCommentAddedEvent)e;
+                logger.trace("Comment category: {}", commentAdded.getVerdictCategory());
+                logger.trace("Comment approval value: {}", commentAdded.getCommentAddedTriggerApprovalValue());
+                logger.trace("Comment: {}", event.getComment());
+                return commentAdded.matchComment(event.getComment());
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Called when a CommentAdded event arrives.
@@ -918,7 +933,7 @@ public class GerritTrigger extends Trigger<AbstractProject> implements GerritEve
             logger.trace("Already building.");
             return;
         }
-        if (isInteresting(event) && matchesApproval(event)) {
+        if (isInteresting(event) && (matchesApproval(event) || matchesComment(event))) {
             logger.trace("The event is interesting.");
             notifyOnTriggered(event);
             schedule(new GerritCause(event, silentMode), event);

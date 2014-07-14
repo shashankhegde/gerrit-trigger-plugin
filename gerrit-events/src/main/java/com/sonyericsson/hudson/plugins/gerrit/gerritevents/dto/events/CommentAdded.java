@@ -71,6 +71,10 @@ public class CommentAdded extends ChangeBasedEvent {
         return true;
     }
 
+    /**
+     * Get the comment string.
+     * @return the comment string
+     */
     public String getComment() {
         return comment;
     }
